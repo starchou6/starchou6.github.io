@@ -1,0 +1,64 @@
+baseURL = "https://starchou6.github.io/"
+languageCode = "en-us"
+title = "ZJ's Tech Blog"
+theme = "PaperMod"
+paginate = 5
+
+[params]
+  author = "ZJ"
+  description = "Software Engineer | C# / .NET / AWS | Auckland-bound 🇳🇿"
+  ShowReadingTime = true
+  ShowShareButtons = true
+  ShowCodeCopyButtons = true
+  ShowBreadCrumbs = true
+  ShowWordCount = true
+  ShowPostNavLinks = true
+  ShowToc = true
+  TocOpen = false
+  defaultTheme = "auto"
+
+  [params.homeInfoParams]
+    Title = "Hi, I'm ZJ 👋"
+    Content = "Software Engineer based in Tokyo, sharing thoughts on .NET, AWS, and cloud engineering. Currently preparing my journey to New Zealand 🇳🇿"
+
+  [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/starchou6"
+
+  [[params.socialIcons]]
+    name = "linkedin"
+    url = "https://linkedin.com/in/YOUR_LINKEDIN_ID"
+
+  [[params.socialIcons]]
+    name = "rss"
+    url = "/index.xml"
+
+[[menu.main]]
+  identifier = "posts"
+  name = "Posts"
+  url = "/posts/"
+  weight = 10
+
+[[menu.main]]
+  identifier = "tags"
+  name = "Tags"
+  url = "/tags/"
+  weight = 20
+
+[[menu.main]]
+  identifier = "about"
+  name = "About"
+  url = "/about/"
+  weight = 30
+
+[markup]
+  [markup.highlight]
+    noClasses = false
+    codeFences = true
+    guessSyntax = true
+    style = "dracula"
+  [markup.goldmark.renderer]
+    unsafe = true
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
