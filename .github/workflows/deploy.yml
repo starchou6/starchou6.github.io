@@ -20,8 +20,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
+      - name: Install PaperMod theme
+        run: git clone --depth=1 https://github.com/adityatelange/hugo-PaperMod.git themes/PaperMod
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
@@ -31,6 +32,9 @@ jobs:
 
       - name: Build
         run: hugo --minify
+
+      - name: List generated files
+        run: find public -type f | head -20
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
