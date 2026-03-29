@@ -14,7 +14,7 @@ Every engineer has a stack of notes, bookmarks, and half-finished documents scat
 
 This blog is my attempt to change that.
 
-I'm **ZJ**, a Software Engineer based in Tokyo, Japan. I work primarily with **C#/.NET** and **AWS**, and I recently took on a Technical Lead role. Over the past few years I've accumulated a lot of hands-on experience — in system design, cloud infrastructure, team dynamics — that I think is worth writing down.
+I'm **Zhou Jing**, a Software Engineer based in Tokyo, Japan. I work primarily with **C#/.NET** and **AWS**, and I recently took on a Technical Lead role. Over the past few years I've accumulated a lot of hands-on experience — in system design, cloud infrastructure, team dynamics — that I think is worth writing down.
 
 So here we are.
 

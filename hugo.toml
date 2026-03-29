@@ -5,7 +5,7 @@ theme = "PaperMod"
 paginate = 5
 
 [params]
-  author = "ZJ"
+  author = "Zhou Jing"
   description = "Software Engineer | C# / .NET / AWS | Auckland-bound 🇳🇿"
   ShowReadingTime = true
   ShowShareButtons = true
@@ -18,8 +18,31 @@ paginate = 5
   defaultTheme = "auto"
 
   [params.homeInfoParams]
-    Title = "Hi, I'm ZJ 👋"
-    Content = "Software Engineer based in Tokyo, sharing thoughts on .NET, AWS, and cloud engineering. Currently preparing my journey to New Zealand 🇳🇿"
+    Title = "Zhou Jing — Software Engineer"
+    Content = """
+📍 Tokyo, Japan &nbsp;|&nbsp; 🇳🇿 Auckland-bound
+
+---
+
+**Current Role**
+Software Engineer & Technical Lead · MicroWorld Co., Ltd. (Feb 2025 – Present)
+
+**Education**
+M.Eng. Electronic Information Engineering · University of Electronic Science and Technology of China (2021)
+
+**Tech Stack**
+C# / .NET · Oracle · AWS · Azure · Docker · Kubernetes · GitHub Actions
+
+**Certifications**
+🏅 AWS Certified DevOps Engineer – Professional
+
+**Languages**
+Chinese (Native) · Japanese (Business) · English (TOEIC 835)
+
+---
+
+This blog is where I share practical experience with .NET, AWS, and cloud engineering.
+"""
 
   [[params.socialIcons]]
     name = "github"

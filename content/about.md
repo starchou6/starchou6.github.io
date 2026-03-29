@@ -4,7 +4,7 @@ date: 2026-04-01
 layout: "page"
 ---
 
-## Hi, I'm ZJ
+## Hi, I'm Zhou Jing
 
 I'm a Software Engineer based in Tokyo, Japan, with a passion for building reliable, scalable systems.
 
