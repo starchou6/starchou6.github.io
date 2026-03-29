@@ -44,4 +44,4 @@ This blog is where I share practical experience and thoughts on:
 - 🐙 GitHub: [github.com/starchou6](https://github.com/starchou6)
 - 💼 LinkedIn: [linkedin.com/in/YOUR_LINKEDIN_ID](https://linkedin.com/in/YOUR_LINKEDIN_ID)
 
-> Feel free to reach out — I'm always happy to chat about tech, cloud, or life in New Zealand 🇳🇿
+> Feel free to reach out — I'm always happy to chat about tech and cloud engineering.

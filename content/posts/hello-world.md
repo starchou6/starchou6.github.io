@@ -4,7 +4,7 @@ date: 2026-04-01
 draft: false
 tags: ["meta", "introduction", "career"]
 categories: ["General"]
-description: "A brief introduction to who I am, what this blog is about, and why I decided to start writing."
+description: "A brief introduction to who I am and what this blog is about."
 ShowToc: true
 ---
 
@@ -27,7 +27,6 @@ I plan to write about:
 - **Practical .NET & C#** — not textbook stuff, but the real-world patterns and pitfalls I've encountered
 - **AWS & DevOps** — from CI/CD pipelines to infrastructure-as-code, things that actually work in production
 - **Engineering leadership** — what I've learned leading a small team
-- **Career & relocation** — I'm actively planning a move to **New Zealand** 🇳🇿, and I'll document that journey too
 
 Posts won't follow a strict schedule. I'll write when I have something worth saying.
 

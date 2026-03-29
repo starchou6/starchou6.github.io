@@ -6,7 +6,7 @@ paginate = 5
 
 [params]
   author = "Zhou Jing"
-  description = "Software Engineer | C# / .NET / AWS | Auckland-bound 🇳🇿"
+  description = "Software Engineer | C# / .NET / AWS | Tokyo, Japan"
   ShowReadingTime = true
   ShowShareButtons = true
   ShowCodeCopyButtons = true
@@ -20,7 +20,7 @@ paginate = 5
   [params.homeInfoParams]
     Title = "Zhou Jing — Software Engineer"
     Content = """
-📍 Tokyo, Japan &nbsp;|&nbsp; 🇳🇿 Auckland-bound
+📍 Tokyo, Japan
 
 ---
 
@@ -80,8 +80,4 @@ This blog is where I share practical experience with .NET, AWS, and cloud engine
     codeFences = true
     guessSyntax = true
     style = "dracula"
-  [markup.goldmark.renderer]
-    unsafe = true
-
-[outputs]
-  home = ["HTML", "RSS", "JSON"]
+  [markup
