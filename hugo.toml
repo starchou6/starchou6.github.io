@@ -1,6 +1,6 @@
 baseURL = "https://starchou6.github.io/"
 languageCode = "en-us"
-title = "ZJ's Tech Blog"
+title = "Zhou Jing's Tech Blog"
 theme = "PaperMod"
 paginate = 5
 
@@ -19,30 +19,7 @@ paginate = 5
 
   [params.homeInfoParams]
     Title = "Zhou Jing — Software Engineer"
-    Content = """
-📍 Tokyo, Japan
-
----
-
-**Current Role**
-Software Engineer & Technical Lead · MicroWorld Co., Ltd. (Feb 2025 – Present)
-
-**Education**
-M.Eng. Electronic Information Engineering · University of Electronic Science and Technology of China (2021)
-
-**Tech Stack**
-C# / .NET · Oracle · AWS · Azure · Docker · Kubernetes · GitHub Actions
-
-**Certifications**
-🏅 AWS Certified DevOps Engineer – Professional
-
-**Languages**
-Chinese (Native) · Japanese (Business) · English (TOEIC 835)
-
----
-
-This blog is where I share practical experience with .NET, AWS, and cloud engineering.
-"""
+    Content = "📍 Tokyo, Japan\n\n---\n\n**Current Role**\n\nSoftware Engineer & Technical Lead · MicroWorld Co., Ltd. (Feb 2025 – Present)\n\n**Education**\n\nM.Eng. Electronic Information Engineering · University of Electronic Science and Technology of China (2021)\n\n**Tech Stack**\n\nC# / .NET · Oracle · AWS · Azure · Docker · Kubernetes · GitHub Actions\n\n**Certifications**\n\nAWS Certified DevOps Engineer – Professional\n\n**Languages**\n\nChinese (Native) · Japanese (Business) · English (TOEIC 835)\n\n---\n\nThis blog is where I share practical experience with .NET, AWS, and cloud engineering."
 
   [[params.socialIcons]]
     name = "github"
@@ -80,4 +57,8 @@ This blog is where I share practical experience with .NET, AWS, and cloud engine
     codeFences = true
     guessSyntax = true
     style = "dracula"
-  [markup
+  [markup.goldmark.renderer]
+    unsafe = true
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
