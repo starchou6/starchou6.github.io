@@ -27,7 +27,7 @@ paginate = 5
 
   [[params.socialIcons]]
     name = "linkedin"
-    url = "https://linkedin.com/in/YOUR_LINKEDIN_ID"
+    url = "www.linkedin.com/in/zhoujing-a60a5a277"
 
   [[params.socialIcons]]
     name = "rss"
