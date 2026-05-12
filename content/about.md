@@ -1,47 +1,42 @@
 ---
 title: "About"
 date: 2026-04-01
-layout: "page"
+layout: "single"
 ---
 
-## Hi, I'm Zhou Jing
+## Zhou Jing — Software Engineer
 
-I'm a Software Engineer based in Tokyo, Japan, with a passion for building reliable, scalable systems.
-
-Currently working as a **Software Engineer & Technical Lead** at MicroWorld Co., Ltd., where I design and implement enterprise-level applications and lead a small engineering team.
-
----
-
-## Tech Stack
-
-- **Languages:** C#, Python, SQL
-- **Frameworks:** .NET 6 / .NET 8, ASP.NET Core
-- **Cloud:** AWS (DevOps Professional Certified), Microsoft Azure
-- **Databases:** Oracle, SQL Server, PostgreSQL
-- **DevOps:** Docker, Kubernetes, Terraform, GitHub Actions, CI/CD pipelines
+📍 Tokyo, Japan
 
 ---
 
-## Certifications
+**Current Role**
 
-- 🏅 **AWS Certified DevOps Engineer – Professional**
+Software Engineer & Technical Lead · MicroWorld Co., Ltd. (Feb 2025 – Present)
+
+**Education**
+
+M.Eng. Electronic Information Engineering · University of Electronic Science and Technology of China (2021)
+
+**Tech Stack**
+
+C# / .NET · Oracle · AWS · Azure · Docker · Kubernetes · GitHub Actions
+
+**Certifications**
+
+AWS Certified DevOps Engineer – Professional
+
+**Languages**
+
+Chinese (Native) · Japanese (Business) · English (TOEIC 835)
 
 ---
 
-## What I Write About
-
-This blog is where I share practical experience and thoughts on:
-
-- **.NET & C#** — patterns, performance, real-world challenges
-- **AWS & Cloud Architecture** — hands-on DevOps and infrastructure design
-- **Engineering Leadership** — lessons learned as a technical lead
-- **My journey to New Zealand** — career relocation, visa, and life planning
+This blog is where I share practical experience with .NET, AWS, and cloud engineering.
 
 ---
 
-## Connect
+**Connect**
 
-- 🐙 GitHub: [github.com/starchou6](https://github.com/starchou6)
-- 💼 LinkedIn: [linkedin.com/in/YOUR_LINKEDIN_ID](https://linkedin.com/in/YOUR_LINKEDIN_ID)
-
-> Feel free to reach out — I'm always happy to chat about tech and cloud engineering.
+- GitHub: [github.com/starchou6](https://github.com/starchou6)
+- LinkedIn: [linkedin.com/in/YOUR_LINKEDIN_ID](https://linkedin.com/in/YOUR_LINKEDIN_ID)
