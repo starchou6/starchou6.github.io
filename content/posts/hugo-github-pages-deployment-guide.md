@@ -1,14 +1,14 @@
 ---
-title: "How I Deployed This Blog with Hugo and GitHub Pages"
+title: "Free Blog in 30 Minutes: Hugo + GitHub Pages from Scratch"
 date: 2026-03-29
 draft: false
 tags: ["hugo", "github-pages", "devops", "blogging"]
 categories: ["Engineering"]
-description: "A practical guide to deploying a Hugo blog on GitHub Pages using GitHub Actions — covering the full deployment pipeline and file architecture."
+description: "No servers, no hosting fees, no CMS — just Markdown and a git push. Here's how to get a fast, professional blog live for free in under 30 minutes."
 ShowToc: true
 ---
 
-When I decided to start a technical blog, I wanted something fast, free, and version-controlled — no databases, no hosting bills, no CMS to maintain. Hugo with GitHub Pages turned out to be exactly that. In this post I'll walk through how the deployment pipeline works and explain the file structure so you can maintain and extend it confidently.
+No servers, no hosting fees, no CMS — just Markdown and a git push. Here's how to get a fast, professional blog live for free in under 30 minutes.
 
 ---
 
