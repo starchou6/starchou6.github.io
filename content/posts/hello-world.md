@@ -1,6 +1,6 @@
 ---
 title: "Hello World – Why I Started This Blog"
-date: 2026-04-01
+date: 2026-03-28
 draft: false
 tags: ["meta", "introduction", "career"]
 categories: ["General"]
@@ -46,6 +46,6 @@ If you're a developer thinking about starting a blog, I'll write a detailed setu
 
 ## Let's Connect
 
-If anything I write is useful to you, or if you want to discuss .NET, AWS, or life in New Zealand, feel free to reach out via [GitHub](https://github.com/starchou6).
+If anything I write is useful to you, or if you want to discuss .NET, AWS, or cloud engineering, feel free to reach out via [GitHub](https://github.com/starchou6).
 
 Thanks for reading. More soon.
