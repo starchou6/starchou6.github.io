@@ -19,7 +19,7 @@ paginate = 5
 
   [params.homeInfoParams]
     Title = "Zhou Jing — Software Engineer"
-    Content = "📍 Tokyo, Japan\n\n---\n\n**Current Role**\n\nSoftware Engineer & Technical Lead · MicroWorld Co., Ltd. (Feb 2025 – Present)\n\n**Education**\n\nM.Eng. Electronic Information Engineering · University of Electronic Science and Technology of China (2021)\n\n**Tech Stack**\n\nC# / .NET · Oracle · AWS · Azure · Docker · Kubernetes · GitHub Actions\n\n**Certifications**\n\nAWS Certified DevOps Engineer – Professional\n\n**Languages**\n\nChinese (Native) · Japanese (Business) · English (TOEIC 835)\n\n---\n\nThis blog is where I share practical experience with .NET, AWS, and cloud engineering."
+    Content = "📍 Tokyo, Japan\n\n---\n\n**Current Role**\n\nSoftware Engineer & Technical Lead · MicroWorld Co., Ltd. (Feb 2025 – Present)\n\n**Education**\n\nM.Eng. Electronic Information Engineering · University of Electronic Science and Technology of China (2021)\n\n**Tech Stack**\n\nC# .NET · Oracle · AWS · Azure · Langchain/LangGraph · Semantic Kernel\n\n**Certifications**\n\nAWS Certified DevOps Engineer – Professional\n\n**Languages**\n\nChinese (Native) · Japanese (Business) · English (TOEIC 835)\n\n---\n\nThis blog is where I share practical experience with AI, .NET, AWS, and cloud engineering."
 
   [[params.socialIcons]]
     name = "github"

@@ -20,7 +20,7 @@ M.Eng. Electronic Information Engineering · University of Electronic Science an
 
 **Tech Stack**
 
-C# .NET · Oracle · AWS · Azure · GitHub Actions
+C# .NET · Oracle · AWS · Azure · Langchain/LangGraph · Semantic Kernel
 
 **Certifications**
 
