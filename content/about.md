@@ -12,7 +12,7 @@ layout: "single"
 
 **Current Role**
 
-AI Appliction Developer & Software Engineer & Technical Lead · MicroWorld Co., Ltd. (Feb 2023 – Present)
+AI Application Developer & Software Engineer & Technical Lead · MicroWorld Co., Ltd. (Feb 2023 – Present)
 
 **Education**
 
