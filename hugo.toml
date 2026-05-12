@@ -27,11 +27,7 @@ paginate = 5
 
   [[params.socialIcons]]
     name = "linkedin"
-    url = "www.linkedin.com/in/zhoujing-a60a5a277"
-
-  [[params.socialIcons]]
-    name = "rss"
-    url = "/index.xml"
+    url = "https://www.linkedin.com/in/zhoujing-a60a5a277"
 
 [[menu.main]]
   identifier = "posts"
