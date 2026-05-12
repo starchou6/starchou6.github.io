@@ -12,7 +12,7 @@ layout: "single"
 
 **Current Role**
 
-Software Engineer & Technical Lead · MicroWorld Co., Ltd. (Feb 2025 – Present)
+AI Appliction Developer & Software Engineer & Technical Lead · MicroWorld Co., Ltd. (Feb 2023 – Present)
 
 **Education**
 
@@ -20,7 +20,7 @@ M.Eng. Electronic Information Engineering · University of Electronic Science an
 
 **Tech Stack**
 
-C# / .NET · Oracle · AWS · Azure · Docker · Kubernetes · GitHub Actions
+C# .NET · Oracle · AWS · Azure · GitHub Actions
 
 **Certifications**
 
@@ -32,11 +32,11 @@ Chinese (Native) · Japanese (Business) · English (TOEIC 835)
 
 ---
 
-This blog is where I share practical experience with .NET, AWS, and cloud engineering.
+This blog is where I share practical experience with AI, .NET, AWS, and cloud engineering.
 
 ---
 
 **Connect**
 
 - GitHub: [github.com/starchou6](https://github.com/starchou6)
-- LinkedIn: [linkedin.com/in/YOUR_LINKEDIN_ID](https://linkedin.com/in/YOUR_LINKEDIN_ID)
+- LinkedIn: [www.linkedin.com/in/zhoujing-a60a5a277](www.linkedin.com/in/zhoujing-a60a5a277)
