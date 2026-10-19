@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -11,7 +14,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: "pages-${{ github.ref }}"
   cancel-in-progress: false
 
 jobs:
@@ -22,12 +25,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install PaperMod theme
-        run: git clone --depth=1 https://github.com/adityatelange/hugo-PaperMod.git themes/PaperMod
+        env:
+          PAPERMOD_COMMIT: 969bebdc5600a1639158b5ef4eff9cf6cbb511ac
+        run: |
+          git init -q themes/PaperMod
+          git -C themes/PaperMod fetch -q --depth=1 https://github.com/adityatelange/hugo-PaperMod.git "$PAPERMOD_COMMIT"
+          git -C themes/PaperMod checkout -q FETCH_HEAD
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
         with:
-          hugo-version: 'latest'
+          hugo-version: '0.168.0'
           extended: true
 
       - name: Build
@@ -37,11 +45,13 @@ jobs:
         run: find public -type f | head -20
 
       - name: Upload artifact
+        if: github.event_name == 'push'
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
 
   deploy:
+    if: github.event_name == 'push'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
