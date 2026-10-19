@@ -2,7 +2,7 @@
 // questions with the Codex CLI, signed in with your ChatGPT account.
 // Run: node bridge.mjs   (Node.js 22 or newer; settings in config.json)
 
-import { spawn, execSync } from "node:child_process";
+import { spawn, execSync, execFileSync } from "node:child_process";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -13,6 +13,12 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const config = JSON.parse(readFileSync(path.join(here, "config.json"), "utf8"));
 
 const CODEX_TIMEOUT_MS = 100_000;
+// The Worker gives up on a question after 120s, so one that has waited
+// longer than this in the queue is skipped instead of answered.
+const MAX_QUEUE_WAIT_MS = 110_000;
+const PING_INTERVAL_MS = 30_000;
+// No pong for this long means the connection is dead (e.g. after sleep).
+const PONG_TIMEOUT_MS = 75_000;
 const INDEX_TTL_MS = 10 * 60 * 1000;
 // Upper bound for blog text in one prompt. When the blog grows past this,
 // only the posts most related to the question are included.
@@ -34,6 +40,40 @@ function resolveCodex() {
   return [process.execPath, entry];
 }
 const codexCommand = resolveCodex();
+
+// Codex tools that could read files, run programs or reach other apps on
+// this computer. Visitors' questions must never be able to use them, so the
+// bridge refuses to start if it can't turn off the shell.
+const REQUIRED_DISABLED = ["shell_tool"];
+const OPTIONAL_DISABLED = [
+  "unified_exec",
+  "browser_use",
+  "browser_use_external",
+  "computer_use",
+  "apps",
+  "plugins",
+  "hooks",
+  "multi_agent",
+  "image_generation",
+  "view_image",
+];
+
+function resolveDisabledFeatures() {
+  const out = execFileSync(codexCommand[0], [...codexCommand.slice(1), "features", "list"], {
+    encoding: "utf8",
+    windowsHide: true,
+  });
+  const known = new Set(out.split("\n").map((line) => line.trim().split(/\s+/)[0]).filter(Boolean));
+  const missing = REQUIRED_DISABLED.filter((f) => !known.has(f));
+  if (missing.length) {
+    throw new Error(
+      `This Codex version has no "${missing.join(", ")}" feature, so the bridge can't turn off Codex's shell. ` +
+        "Not starting, to keep visitors from running commands on this computer.",
+    );
+  }
+  return [...REQUIRED_DISABLED, ...OPTIONAL_DISABLED.filter((f) => known.has(f))];
+}
+const disabledFeatures = resolveDisabledFeatures();
 
 let indexCache = null;
 
@@ -119,6 +159,7 @@ async function runCodex(prompt) {
     "-C", dir,
     "-o", outFile,
     "-c", `model_reasoning_effort="${config.reasoningEffort || "low"}"`,
+    ...disabledFeatures.flatMap((f) => ["--disable", f]),
     ...(config.codexModel ? ["-m", config.codexModel] : []),
     "-",
   ];
@@ -169,15 +210,40 @@ function connect(attempt = 0) {
   url.protocol = url.protocol === "http:" ? "ws:" : "wss:";
   const ws = new WebSocket(url, { headers: { Authorization: `Bearer ${config.bridgeToken}` } });
   let keepalive;
+  let lastPong = Date.now();
+  let closed = false;
+
+  // Reconnect once, whether the socket closed or went silent.
+  function reconnect(reason) {
+    if (closed) return;
+    closed = true;
+    clearInterval(keepalive);
+    const delay = Math.min(30_000, 1000 * 2 ** attempt);
+    log(`Disconnected (${reason}), retrying in ${delay / 1000}s`);
+    setTimeout(() => connect(attempt + 1), delay);
+  }
 
   ws.addEventListener("open", () => {
     attempt = 0;
     log("Connected. The chat button is now visible on the blog.");
-    keepalive = setInterval(() => ws.send("ping"), 30_000);
+    lastPong = Date.now();
+    keepalive = setInterval(() => {
+      if (Date.now() - lastPong > PONG_TIMEOUT_MS) {
+        reconnect("no response from the Worker");
+        try {
+          ws.close();
+        } catch {}
+        return;
+      }
+      ws.send("ping");
+    }, PING_INTERVAL_MS);
   });
 
   ws.addEventListener("message", (event) => {
-    if (event.data === "pong") return;
+    if (event.data === "pong") {
+      lastPong = Date.now();
+      return;
+    }
     let msg;
     try {
       msg = JSON.parse(event.data);
@@ -186,8 +252,13 @@ function connect(attempt = 0) {
     }
     if (msg.type !== "ask") return;
 
+    const receivedAt = Date.now();
     queue = queue.then(async () => {
       const started = Date.now();
+      if (started - receivedAt > MAX_QUEUE_WAIT_MS) {
+        log("Skipped a question that waited too long in the queue");
+        return;
+      }
       log("Question:", msg.messages[msg.messages.length - 1].content.slice(0, 80));
       try {
         const text = await answer(msg.messages);
@@ -201,10 +272,7 @@ function connect(attempt = 0) {
   });
 
   ws.addEventListener("close", (event) => {
-    clearInterval(keepalive);
-    const delay = Math.min(30_000, 1000 * 2 ** attempt);
-    log(`Disconnected (${event.code}${event.reason ? ` ${event.reason}` : ""}), retrying in ${delay / 1000}s`);
-    setTimeout(() => connect(attempt + 1), delay);
+    reconnect(`${event.code}${event.reason ? ` ${event.reason}` : ""}`);
   });
 
   ws.addEventListener("error", () => {

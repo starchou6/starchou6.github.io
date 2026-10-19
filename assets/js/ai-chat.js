@@ -15,10 +15,21 @@
     return text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   }
 
+  // Only links to this blog are made clickable, so an answer can't send
+  // visitors to a site the blog doesn't control.
+  function link(match, label, href) {
+    try {
+      if (new URL(href.replace(/&amp;/g, "&")).origin === location.origin) {
+        return '<a href="' + href + '">' + label + "</a>";
+      }
+    } catch (e) {}
+    return label;
+  }
+
   // Small Markdown subset: links, bold, inline code, line breaks.
   function render(text) {
     return escapeHtml(text)
-      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>')
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, link)
       .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
       .replace(/`([^`]+)`/g, "<code>$1</code>")
       .replace(/\n/g, "<br>");

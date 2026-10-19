@@ -6,8 +6,10 @@ export interface Env {
   BRIDGE_TOKEN: string;
   // Comma-separated list of origins allowed to call this worker.
   ALLOWED_ORIGINS: string;
-  // Questions each IP may ask per day (UTC). Answers from the cache don't count.
+  // Questions each IP (IPv6: each /64) may ask per day (UTC), and questions
+  // the whole site may send to the bridge per day. Cached answers don't count.
   DAILY_LIMIT: string;
+  GLOBAL_DAILY_LIMIT: string;
   // Public URL of the blog; the cache is emptied when its /index.json changes.
   BLOG_URL: string;
   // How similar (cosine, 0-1) a question must be to a cached one to reuse its answer.
@@ -24,6 +26,37 @@ interface ChatMessage {
 const MAX_MESSAGES = 10;
 const MAX_MESSAGE_CHARS = 1000;
 const ANSWER_TIMEOUT_MS = 120_000;
+// The bridge pings every 30s; a bridge silent for longer than this (e.g. its
+// computer went to sleep) is treated as offline.
+const BRIDGE_STALE_MS = 90_000;
+
+// True when the answer links anywhere other than the blog. Such answers
+// aren't cached, so one visitor can't plant a link that others are shown.
+function linksOutsideBlog(answer: string, blogUrl: string): boolean {
+  const blogHost = new URL(blogUrl).host;
+  for (const match of answer.matchAll(/https?:\/\/[^\s)\]>"']+/g)) {
+    try {
+      if (new URL(match[0]).host !== blogHost) return true;
+    } catch {
+      return true;
+    }
+  }
+  return false;
+}
+
+// IPv6 users can switch addresses within their /64 at will, so they are
+// counted per /64 network.
+function clientKey(ip: string): string {
+  // IPv4, including IPv4-mapped IPv6 such as ::ffff:203.0.113.5.
+  if (!ip.includes(":") || ip.includes(".")) return ip;
+  const [head, tail = ""] = ip.split("::");
+  const left = head ? head.split(":") : [];
+  const right = tail ? tail.split(":") : [];
+  const groups = ip.includes("::")
+    ? [...left, ...Array(8 - left.length - right.length).fill("0"), ...right]
+    : left;
+  return `${groups.slice(0, 4).map((g) => parseInt(g || "0", 16).toString(16)).join(":")}::/64`;
+}
 
 function corsHeaders(origin: string | null, env: Env): Record<string, string> {
   const allowed = env.ALLOWED_ORIGINS.split(",").map((o) => o.trim());
@@ -81,7 +114,11 @@ export class Hub extends DurableObject<Env> {
   }
 
   private bridge(): WebSocket | undefined {
-    return this.ctx.getWebSockets("bridge")[0];
+    const ws = this.ctx.getWebSockets("bridge")[0];
+    if (!ws) return undefined;
+    const lastPing = this.ctx.getWebSocketAutoResponseTimestamp(ws)?.getTime();
+    const connectedAt = (ws.deserializeAttachment() as { connectedAt: number } | null)?.connectedAt ?? 0;
+    return Date.now() - Math.max(lastPing ?? 0, connectedAt) < BRIDGE_STALE_MS ? ws : undefined;
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -103,10 +140,14 @@ export class Hub extends DurableObject<Env> {
     for (const ws of this.ctx.getWebSockets("bridge")) ws.close(1000, "Replaced");
     const { 0: client, 1: server } = new WebSocketPair();
     this.ctx.acceptWebSocket(server, ["bridge"]);
+    server.serializeAttachment({ connectedAt: Date.now() });
     return new Response(null, { status: 101, webSocket: client });
   }
 
-  private async countToday(ip: string): Promise<boolean> {
+  // Counts a question against the visitor's and the site's daily limits.
+  // Returns the counter keys to refund if the question isn't answered, or an
+  // error message when a limit is reached.
+  private async countToday(ip: string): Promise<{ keys: string[] } | { error: string }> {
     const today = new Date().toISOString().slice(0, 10);
     if (this.counterDay !== today) {
       // Drop counters from earlier days.
@@ -117,11 +158,27 @@ export class Hub extends DurableObject<Env> {
       }
       this.counterDay = today;
     }
-    const key = `count:${today}:${ip}`;
-    const used = (await this.ctx.storage.get<number>(key)) ?? 0;
-    if (used >= Number(this.env.DAILY_LIMIT)) return false;
-    await this.ctx.storage.put(key, used + 1);
-    return true;
+    const visitorKey = `count:${today}:${clientKey(ip)}`;
+    const siteKey = `count:${today}:*`;
+    const [visitor = 0, site = 0] = await Promise.all([
+      this.ctx.storage.get<number>(visitorKey),
+      this.ctx.storage.get<number>(siteKey),
+    ]);
+    if (visitor >= Number(this.env.DAILY_LIMIT)) {
+      return { error: "You've reached today's question limit. Please come back tomorrow." };
+    }
+    if (site >= Number(this.env.GLOBAL_DAILY_LIMIT)) {
+      return { error: "The assistant has answered all it can for today. Please come back tomorrow." };
+    }
+    await this.ctx.storage.put({ [visitorKey]: visitor + 1, [siteKey]: site + 1 });
+    return { keys: [visitorKey, siteKey] };
+  }
+
+  private async refund(keys: string[]): Promise<void> {
+    for (const key of keys) {
+      const used = (await this.ctx.storage.get<number>(key)) ?? 0;
+      if (used > 0) await this.ctx.storage.put(key, used - 1);
+    }
   }
 
   private async ask(request: Request): Promise<Response> {
@@ -148,9 +205,8 @@ export class Hub extends DurableObject<Env> {
 
     const bridge = this.bridge();
     if (!bridge) return json({ error: "The assistant is offline right now." }, 503);
-    if (!(await this.countToday(ip))) {
-      return json({ error: "You've reached today's question limit. Please come back tomorrow." }, 429);
-    }
+    const counted = await this.countToday(ip);
+    if ("error" in counted) return json({ error: counted.error }, 429);
 
     const id = crypto.randomUUID();
     const result = await new Promise<{ answer?: string; error?: string }>((resolve) => {
@@ -166,8 +222,13 @@ export class Hub extends DurableObject<Env> {
       bridge.send(JSON.stringify({ type: "ask", id, messages }));
     });
 
-    if (!result.answer) return json({ error: result.error }, 502);
-    if (vector) this.cache.store(messages[0].content, result.answer, vector);
+    if (!result.answer) {
+      await this.refund(counted.keys);
+      return json({ error: result.error }, 502);
+    }
+    if (vector && !linksOutsideBlog(result.answer, this.env.BLOG_URL)) {
+      this.cache.store(messages[0].content, result.answer, vector);
+    }
     return json({ answer: result.answer }, 200);
   }
 
