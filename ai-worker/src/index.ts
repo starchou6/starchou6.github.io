@@ -1,12 +1,18 @@
 import { DurableObject } from "cloudflare:workers";
+import { AnswerCache } from "./answer-cache";
 
 export interface Env {
   // Shared secret the local bridge presents when it connects.
   BRIDGE_TOKEN: string;
   // Comma-separated list of origins allowed to call this worker.
   ALLOWED_ORIGINS: string;
-  // Questions each IP may ask per day (UTC).
+  // Questions each IP may ask per day (UTC). Answers from the cache don't count.
   DAILY_LIMIT: string;
+  // Public URL of the blog; the cache is emptied when its /index.json changes.
+  BLOG_URL: string;
+  // How similar (cosine, 0-1) a question must be to a cached one to reuse its answer.
+  SIMILARITY_THRESHOLD: string;
+  AI: Ai;
   HUB: DurableObjectNamespace<Hub>;
 }
 
@@ -61,15 +67,17 @@ function parseMessages(body: unknown): ChatMessage[] | null {
 }
 
 // One instance holds the bridge's WebSocket, the questions waiting for an
-// answer, and the per-IP daily counters.
+// answer, the per-IP daily counters and the answer cache.
 export class Hub extends DurableObject<Env> {
   private pending = new Map<string, (answer: { answer?: string; error?: string }) => void>();
   private counterDay = "";
+  private cache: AnswerCache;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     // Answer the bridge's keepalive pings without waking the object.
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
+    this.cache = new AnswerCache(ctx.storage.sql, env.AI, env.BLOG_URL, Number(env.SIMILARITY_THRESHOLD));
   }
 
   private bridge(): WebSocket | undefined {
@@ -118,6 +126,26 @@ export class Hub extends DurableObject<Env> {
 
   private async ask(request: Request): Promise<Response> {
     const { ip, messages } = (await request.json()) as { ip: string; messages: ChatMessage[] };
+
+    // Only a conversation's opening question is cached; follow-ups depend on
+    // what was said before.
+    let vector: Float32Array | null = null;
+    if (messages.length === 1) {
+      const question = messages[0].content;
+      try {
+        vector = await this.cache.embed(question);
+        const hit = await this.cache.lookup(vector);
+        if (hit) {
+          console.log(`Cache hit (${hit.similarity.toFixed(3)}): "${question}" ~ "${hit.question}"`);
+          return json({ answer: hit.answer }, 200);
+        }
+      } catch (error) {
+        // Without the cache, the question still goes to the bridge.
+        console.error("Answer cache unavailable:", error);
+        vector = null;
+      }
+    }
+
     const bridge = this.bridge();
     if (!bridge) return json({ error: "The assistant is offline right now." }, 503);
     if (!(await this.countToday(ip))) {
@@ -138,7 +166,9 @@ export class Hub extends DurableObject<Env> {
       bridge.send(JSON.stringify({ type: "ask", id, messages }));
     });
 
-    return result.answer ? json({ answer: result.answer }, 200) : json({ error: result.error }, 502);
+    if (!result.answer) return json({ error: result.error }, 502);
+    if (vector) this.cache.store(messages[0].content, result.answer, vector);
+    return json({ answer: result.answer }, 200);
   }
 
   async webSocketMessage(_ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
