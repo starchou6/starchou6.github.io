@@ -65,7 +65,7 @@ theme = "PaperMod"
 # Cloudflare Worker in ai-worker/ and the local bridge is online
 # (see ai-worker/README.md).
 [params.aiChat]
-  endpoint = ""
+  endpoint = "https://blog-ai-qa.starchou666.workers.dev"
   title = "Ask the blog"
   greeting = "Hi! Ask me anything about the posts on this blog."
   placeholder = "Type your question…"
