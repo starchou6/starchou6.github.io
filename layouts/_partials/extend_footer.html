@@ -1,0 +1,22 @@
+{{- with site.Params.aiChat }}
+{{- if .endpoint }}
+<div id="ai-chat" class="ai-chat" hidden data-endpoint="{{ .endpoint }}" data-greeting="{{ .greeting | default "Hi! Ask me anything about the posts on this blog." }}">
+  <button type="button" class="ai-chat-toggle" aria-expanded="false" aria-controls="ai-chat-panel" aria-label="{{ .title | default "Ask the blog" }}">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </button>
+  <section id="ai-chat-panel" class="ai-chat-panel" hidden>
+    <header class="ai-chat-header">
+      <span>{{ .title | default "Ask the blog" }}</span>
+      <button type="button" class="ai-chat-close" aria-label="Close">&times;</button>
+    </header>
+    <div class="ai-chat-messages" aria-live="polite"></div>
+    <form class="ai-chat-form">
+      <textarea rows="1" maxlength="1000" placeholder="{{ .placeholder | default "Type your question…" }}" aria-label="{{ .placeholder | default "Type your question…" }}" required></textarea>
+      <button type="submit">{{ .send | default "Send" }}</button>
+    </form>
+  </section>
+</div>
+{{- $js := resources.Get "js/ai-chat.js" | resources.Minify | resources.Fingerprint }}
+<script src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}" defer></script>
+{{- end }}
+{{- end }}

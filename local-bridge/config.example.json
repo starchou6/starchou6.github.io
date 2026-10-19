@@ -1,0 +1,7 @@
+{
+  "workerUrl": "https://blog-ai-qa.<your-subdomain>.workers.dev",
+  "bridgeToken": "<the same value you set with wrangler secret put BRIDGE_TOKEN>",
+  "blogUrl": "https://starchou6.github.io",
+  "codexModel": "",
+  "reasoningEffort": "low"
+}
