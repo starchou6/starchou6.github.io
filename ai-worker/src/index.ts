@@ -1,20 +1,13 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { DurableObject } from "cloudflare:workers";
 
 export interface Env {
-  ANTHROPIC_API_KEY: string;
-  // Public URL of the blog, e.g. https://starchou6.github.io
-  BLOG_URL: string;
+  // Shared secret the local bridge presents when it connects.
+  BRIDGE_TOKEN: string;
   // Comma-separated list of origins allowed to call this worker.
   ALLOWED_ORIGINS: string;
-  MODEL?: string;
-  // Optional Cloudflare rate limiting binding (see wrangler.toml).
-  RATE_LIMITER?: { limit(options: { key: string }): Promise<{ success: boolean }> };
-}
-
-interface Post {
-  title: string;
-  content: string;
-  permalink: string;
+  // Questions each IP may ask per day (UTC).
+  DAILY_LIMIT: string;
+  HUB: DurableObjectNamespace<Hub>;
 }
 
 interface ChatMessage {
@@ -24,84 +17,12 @@ interface ChatMessage {
 
 const MAX_MESSAGES = 10;
 const MAX_MESSAGE_CHARS = 1000;
-// Upper bound for blog text sent to the model per request. When the blog
-// grows past this, only the posts most related to the question are sent.
-const MAX_CONTEXT_CHARS = 200_000;
-const INDEX_TTL_MS = 10 * 60 * 1000;
-
-let indexCache: { posts: Post[]; fetchedAt: number } | null = null;
-
-async function loadPosts(env: Env): Promise<Post[]> {
-  if (indexCache && Date.now() - indexCache.fetchedAt < INDEX_TTL_MS) {
-    return indexCache.posts;
-  }
-  // PaperMod already publishes every page as /index.json for its search page.
-  const res = await fetch(new URL("/index.json", env.BLOG_URL).toString());
-  if (!res.ok) throw new Error(`Failed to load blog index: ${res.status}`);
-  const posts = (await res.json()) as Post[];
-  indexCache = { posts, fetchedAt: Date.now() };
-  return posts;
-}
-
-// Lowercased words plus CJK character bigrams, so scoring works for
-// English, Chinese and Japanese questions alike.
-function tokenize(text: string): Set<string> {
-  const tokens = new Set<string>();
-  const lower = text.toLowerCase();
-  for (const word of lower.match(/[a-z0-9][a-z0-9.#+-]*/g) ?? []) {
-    if (word.length > 1) tokens.add(word);
-  }
-  const cjk = lower.match(/[぀-ヿ㐀-鿿]+/g) ?? [];
-  for (const run of cjk) {
-    for (let i = 0; i < run.length - 1; i++) tokens.add(run.slice(i, i + 2));
-  }
-  return tokens;
-}
-
-function selectPosts(posts: Post[], question: string): Post[] {
-  const total = posts.reduce((n, p) => n + p.content.length, 0);
-  if (total <= MAX_CONTEXT_CHARS) return posts;
-
-  const q = tokenize(question);
-  const scored = posts.map((post) => {
-    const t = tokenize(`${post.title} ${post.title} ${post.content}`);
-    let score = 0;
-    for (const token of q) if (t.has(token)) score++;
-    return { post, score };
-  });
-  scored.sort((a, b) => b.score - a.score);
-
-  const selected: Post[] = [];
-  let used = 0;
-  for (const { post } of scored) {
-    if (used + post.content.length > MAX_CONTEXT_CHARS) continue;
-    selected.push(post);
-    used += post.content.length;
-  }
-  return selected;
-}
-
-function buildSystemPrompt(posts: Post[]): string {
-  const docs = posts
-    .map(
-      (p, i) =>
-        `<post index="${i + 1}">\n<title>${p.title}</title>\n<url>${p.permalink}</url>\n<content>\n${p.content}\n</content>\n</post>`,
-    )
-    .join("\n\n");
-
-  return `You are the Q&A assistant on Zhou Jing's tech blog. Visitors ask you questions about the blog's posts and about the author.
-
-Answer using only the blog content below. When you use a post, link to it with a Markdown link to its URL. If the content does not cover the question, say so briefly and suggest a related post if one exists; do not make up facts about the author or the posts. Reply in the language the visitor writes in. Keep answers short and conversational: a few sentences, or a short list when steps are involved.
-
-<blog>
-${docs}
-</blog>`;
-}
+const ANSWER_TIMEOUT_MS = 120_000;
 
 function corsHeaders(origin: string | null, env: Env): Record<string, string> {
   const allowed = env.ALLOWED_ORIGINS.split(",").map((o) => o.trim());
   const headers: Record<string, string> = {
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
@@ -112,7 +33,7 @@ function corsHeaders(origin: string | null, env: Env): Record<string, string> {
   return headers;
 }
 
-function json(body: unknown, status: number, headers: Record<string, string>): Response {
+function json(body: unknown, status: number, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...headers, "Content-Type": "application/json" },
@@ -139,71 +60,153 @@ function parseMessages(body: unknown): ChatMessage[] | null {
   return messages as ChatMessage[];
 }
 
+// One instance holds the bridge's WebSocket, the questions waiting for an
+// answer, and the per-IP daily counters.
+export class Hub extends DurableObject<Env> {
+  private pending = new Map<string, (answer: { answer?: string; error?: string }) => void>();
+  private counterDay = "";
+
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    // Answer the bridge's keepalive pings without waking the object.
+    ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
+  }
+
+  private bridge(): WebSocket | undefined {
+    return this.ctx.getWebSockets("bridge")[0];
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    switch (url.pathname) {
+      case "/connect":
+        return this.acceptBridge();
+      case "/status":
+        return json({ online: Boolean(this.bridge()) }, 200);
+      case "/ask":
+        return this.ask(request);
+      default:
+        return json({ error: "Not found" }, 404);
+    }
+  }
+
+  private acceptBridge(): Response {
+    // A new bridge replaces any stale connection.
+    for (const ws of this.ctx.getWebSockets("bridge")) ws.close(1000, "Replaced");
+    const { 0: client, 1: server } = new WebSocketPair();
+    this.ctx.acceptWebSocket(server, ["bridge"]);
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
+  private async countToday(ip: string): Promise<boolean> {
+    const today = new Date().toISOString().slice(0, 10);
+    if (this.counterDay !== today) {
+      // Drop counters from earlier days.
+      const old = await this.ctx.storage.list({ prefix: "count:" });
+      const stale = [...old.keys()].filter((k) => !k.startsWith(`count:${today}:`));
+      for (let i = 0; i < stale.length; i += 128) {
+        await this.ctx.storage.delete(stale.slice(i, i + 128));
+      }
+      this.counterDay = today;
+    }
+    const key = `count:${today}:${ip}`;
+    const used = (await this.ctx.storage.get<number>(key)) ?? 0;
+    if (used >= Number(this.env.DAILY_LIMIT)) return false;
+    await this.ctx.storage.put(key, used + 1);
+    return true;
+  }
+
+  private async ask(request: Request): Promise<Response> {
+    const { ip, messages } = (await request.json()) as { ip: string; messages: ChatMessage[] };
+    const bridge = this.bridge();
+    if (!bridge) return json({ error: "The assistant is offline right now." }, 503);
+    if (!(await this.countToday(ip))) {
+      return json({ error: "You've reached today's question limit. Please come back tomorrow." }, 429);
+    }
+
+    const id = crypto.randomUUID();
+    const result = await new Promise<{ answer?: string; error?: string }>((resolve) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        resolve({ error: "The assistant took too long to answer, please try again." });
+      }, ANSWER_TIMEOUT_MS);
+      this.pending.set(id, (r) => {
+        clearTimeout(timer);
+        this.pending.delete(id);
+        resolve(r);
+      });
+      bridge.send(JSON.stringify({ type: "ask", id, messages }));
+    });
+
+    return result.answer ? json({ answer: result.answer }, 200) : json({ error: result.error }, 502);
+  }
+
+  async webSocketMessage(_ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
+    if (typeof message !== "string") return;
+    let data: { type?: string; id?: string; answer?: string; error?: string };
+    try {
+      data = JSON.parse(message);
+    } catch {
+      return;
+    }
+    if (data.type === "answer" && data.id) {
+      this.pending.get(data.id)?.({ answer: data.answer, error: data.error });
+    }
+  }
+
+  async webSocketClose(): Promise<void> {
+    if (this.bridge()) return;
+    for (const resolve of this.pending.values()) {
+      resolve({ error: "The assistant went offline, please try again later." });
+    }
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const origin = request.headers.get("Origin");
-    const cors = corsHeaders(origin, env);
+    const url = new URL(request.url);
+    const hub = env.HUB.get(env.HUB.idFromName("main"));
 
+    if (url.pathname === "/connect") {
+      if (request.headers.get("Upgrade") !== "websocket") {
+        return json({ error: "Expected a WebSocket" }, 426);
+      }
+      if (request.headers.get("Authorization") !== `Bearer ${env.BRIDGE_TOKEN}`) {
+        return json({ error: "Unauthorized" }, 401);
+      }
+      return hub.fetch("https://hub/connect", request);
+    }
+
+    const cors = corsHeaders(request.headers.get("Origin"), env);
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: cors });
-    }
-    if (request.method !== "POST") {
-      return json({ error: "Method not allowed" }, 405, cors);
     }
     if (!cors["Access-Control-Allow-Origin"]) {
       return json({ error: "Origin not allowed" }, 403, cors);
     }
 
-    if (env.RATE_LIMITER) {
+    if (url.pathname === "/status" && request.method === "GET") {
+      const res = await hub.fetch("https://hub/status");
+      return json(await res.json(), 200, { ...cors, "Cache-Control": "no-store" });
+    }
+
+    if (url.pathname === "/chat" && request.method === "POST") {
+      let messages: ChatMessage[] | null;
+      try {
+        messages = parseMessages(await request.json());
+      } catch {
+        messages = null;
+      }
+      if (!messages) return json({ error: "Invalid request" }, 400, cors);
+
       const ip = request.headers.get("CF-Connecting-IP") ?? "unknown";
-      const { success } = await env.RATE_LIMITER.limit({ key: ip });
-      if (!success) return json({ error: "Too many requests, please try again later." }, 429, cors);
-    }
-
-    let messages: ChatMessage[] | null;
-    try {
-      messages = parseMessages(await request.json());
-    } catch {
-      messages = null;
-    }
-    if (!messages) return json({ error: "Invalid request" }, 400, cors);
-
-    try {
-      const posts = await loadPosts(env);
-      const question = messages[messages.length - 1].content;
-      const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-
-      const response = await client.beta.messages.create({
-        model: env.MODEL || "claude-opus-5-5",
-        max_tokens: 4000,
-        output_config: { effort: "low" },
-        // Retry on the server-defined fallback model if the request is declined.
-        betas: ["server-side-fallback-2026-07-01"],
-        fallbacks: "default",
-        system: [
-          {
-            type: "text",
-            text: buildSystemPrompt(selectPosts(posts, question)),
-            cache_control: { type: "ephemeral" },
-          },
-        ],
-        messages,
+      const res = await hub.fetch("https://hub/ask", {
+        method: "POST",
+        body: JSON.stringify({ ip, messages }),
       });
-
-      if (response.stop_reason === "refusal") {
-        return json({ answer: "Sorry, I can't help with that question." }, 200, cors);
-      }
-      const answer = response.content
-        .flatMap((block) => (block.type === "text" ? [block.text] : []))
-        .join("")
-        .trim();
-      return json({ answer }, 200, cors);
-    } catch (error) {
-      if (error instanceof Anthropic.RateLimitError) {
-        return json({ error: "The assistant is busy, please try again later." }, 503, cors);
-      }
-      console.error(error);
-      return json({ error: "Something went wrong, please try again later." }, 500, cors);
+      return json(await res.json(), res.status, cors);
     }
+
+    return json({ error: "Not found" }, 404, cors);
   },
 };

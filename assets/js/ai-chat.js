@@ -2,7 +2,7 @@
   const root = document.getElementById("ai-chat");
   if (!root) return;
 
-  const endpoint = root.dataset.endpoint;
+  const endpoint = root.dataset.endpoint.replace(/\/+$/, "");
   const toggle = root.querySelector(".ai-chat-toggle");
   const panel = root.querySelector(".ai-chat-panel");
   const list = root.querySelector(".ai-chat-messages");
@@ -65,7 +65,7 @@
     pending.classList.add("ai-chat-pending");
 
     try {
-      const res = await fetch(endpoint, {
+      const res = await fetch(endpoint + "/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: history }),
@@ -85,4 +85,12 @@
       input.focus();
     }
   });
+
+  // Show the button only while the computer that answers questions is online.
+  fetch(endpoint + "/status")
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.online) root.hidden = false;
+    })
+    .catch(() => {});
 })();

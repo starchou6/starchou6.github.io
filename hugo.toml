@@ -61,8 +61,9 @@ theme = "PaperMod"
 [pagination]
   pagerSize = 5
 
-# AI Q&A widget. It stays hidden until `endpoint` points at the deployed
-# Cloudflare Worker in ai-worker/ (see ai-worker/README.md).
+# AI Q&A widget. It shows only when `endpoint` points at the deployed
+# Cloudflare Worker in ai-worker/ and the local bridge is online
+# (see ai-worker/README.md).
 [params.aiChat]
   endpoint = ""
   title = "Ask the blog"
