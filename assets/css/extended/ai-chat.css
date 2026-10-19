@@ -1,0 +1,133 @@
+.ai-chat {
+    position: fixed;
+    right: 20px;
+    bottom: 80px;
+    z-index: 100;
+    font-size: 15px;
+}
+
+.ai-chat-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-left: auto;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--theme);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+
+.ai-chat-panel {
+    position: absolute;
+    right: 0;
+    bottom: 60px;
+    display: flex;
+    flex-direction: column;
+    width: min(360px, calc(100vw - 32px));
+    height: min(520px, calc(100vh - 160px));
+    background: var(--entry);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+}
+
+.ai-chat-panel[hidden] {
+    display: none;
+}
+
+.ai-chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    font-weight: 600;
+    color: var(--primary);
+    border-bottom: 1px solid var(--border);
+}
+
+.ai-chat-close {
+    font-size: 22px;
+    line-height: 1;
+    color: var(--secondary);
+    background: none;
+    cursor: pointer;
+}
+
+.ai-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ai-chat-msg {
+    max-width: 85%;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    line-height: 1.5;
+    color: var(--content);
+    word-wrap: break-word;
+}
+
+.ai-chat-msg a {
+    text-decoration: underline;
+}
+
+.ai-chat-msg code {
+    padding: 1px 4px;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    border-radius: 4px;
+}
+
+.ai-chat-assistant {
+    align-self: flex-start;
+    background: var(--code-bg);
+}
+
+.ai-chat-user {
+    align-self: flex-end;
+    background: var(--primary);
+    color: var(--theme);
+}
+
+.ai-chat-pending {
+    color: var(--secondary);
+}
+
+.ai-chat-form {
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    border-top: 1px solid var(--border);
+}
+
+.ai-chat-form textarea {
+    flex: 1;
+    resize: none;
+    padding: 6px 10px;
+    font: inherit;
+    color: var(--content);
+    background: var(--theme);
+    border: 1px solid var(--tertiary);
+    border-radius: var(--radius);
+}
+
+.ai-chat-form button {
+    padding: 0 14px;
+    color: var(--theme);
+    background: var(--primary);
+    border-radius: var(--radius);
+    cursor: pointer;
+}
+
+.ai-chat-form button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
