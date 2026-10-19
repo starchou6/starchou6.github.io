@@ -190,11 +190,9 @@ Until `endpoint` is set, the widget isn't rendered at all, so the code could be 
 
 Next, the bridge reported WebSocket close code 1006: the connection was dropped during the TLS handshake. The quickest way to narrow this down was to open the Worker's `/status` URL from a phone on mobile data. It returned `{"error":"Origin not allowed"}`, which is exactly right for a request without the blog's origin, so the Worker itself was fine.
 
-A little later, the bridge connected on its own (it retries with backoff, up to every 30 seconds). My best guess is that the freshly created subdomain simply needed a few minutes before its HTTPS certificate was ready. If you hit the same thing, check from another network before changing anything, and check whether a proxy, VPN or antivirus HTTPS scanner on the PC is intercepting traffic.
+A little later, the bridge connected on its own (it retries with backoff, up to every 30 seconds). The cause was that the freshly created subdomain needed a few minutes before its HTTPS certificate was ready. If you hit the same thing right after creating your subdomain, confirm the Worker answers from another network, then just wait a few minutes before changing anything.
 
-### "Something went wrong"
-
-The chat button appeared, but the first answer was the generic error message. The detailed reason is printed in the bridge window, not shown to visitors. The usual cause is the model name in `config.json`: it has to match a model Codex actually offers, so check it with `/model` inside `codex`. Leaving it empty uses Codex's default. After fixing the configuration, everything worked end to end.
+With the bridge connected, the chat button appeared on the blog and questions were answered end to end.
 
 Two finishing touches: a shortcut to `start-bridge.bat` in the `shell:startup` folder of the bridge's Windows account, so it starts automatically when that account logs in, and an eye on `wrangler tail` to tune the cache threshold.
 
