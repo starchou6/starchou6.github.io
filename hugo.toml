@@ -1,5 +1,9 @@
 baseURL = "https://starchou6.github.io/"
-locale = "en-us"
+defaultContentLanguage = "en"
+# English stays at the site root (/posts/...); other languages get a prefix (/zh/posts/...).
+defaultContentLanguageInSubdir = false
+# Makes word counts and reading times correct for Chinese and Japanese.
+hasCJKLanguage = true
 title = "Zhou Jing's Tech Blog"
 theme = "PaperMod"
 
@@ -15,6 +19,8 @@ theme = "PaperMod"
   ShowToc = true
   TocOpen = false
   defaultTheme = "auto"
+  # Show "简体中文" rather than "Zh" in the language switcher.
+  displayFullLangName = true
 
   [params.homeInfoParams]
     Title = "Zhou Jing — Software Engineer"
@@ -27,24 +33,6 @@ theme = "PaperMod"
   [[params.socialIcons]]
     name = "linkedin"
     url = "https://www.linkedin.com/in/zhoujing-a60a5a277"
-
-[[menu.main]]
-  identifier = "posts"
-  name = "Posts"
-  url = "/posts/"
-  weight = 10
-
-[[menu.main]]
-  identifier = "tags"
-  name = "Tags"
-  url = "/tags/"
-  weight = 20
-
-[[menu.main]]
-  identifier = "about"
-  name = "About"
-  url = "/about/"
-  weight = 30
 
 [markup]
   [markup.highlight]
@@ -69,3 +57,152 @@ theme = "PaperMod"
   title = "Ask the blog"
   greeting = "Hi! Ask me anything about the posts on this blog."
   placeholder = "Type your question…"
+  send = "Send"
+
+# Each language overrides the site title, description, homepage intro, menu
+# and AI chat text. Translate a post by adding e.g. my-post.zh.md next to
+# my-post.md.
+[languages]
+  [languages.en]
+    label = "English"
+    locale = "en-us"
+    weight = 1
+    [[languages.en.menus.main]]
+      identifier = "posts"
+      name = "Posts"
+      url = "/posts/"
+      weight = 10
+    [[languages.en.menus.main]]
+      identifier = "tags"
+      name = "Tags"
+      url = "/tags/"
+      weight = 20
+    [[languages.en.menus.main]]
+      identifier = "about"
+      name = "About"
+      url = "/about/"
+      weight = 30
+
+  [languages.zh]
+    label = "简体中文"
+    locale = "zh-cn"
+    title = "Zhou Jing 的技术博客"
+    weight = 2
+    [languages.zh.params]
+      description = "软件工程师 | C# / .NET / AWS | 日本东京"
+      [languages.zh.params.homeInfoParams]
+        Title = "Zhou Jing — 软件工程师"
+        Content = "📍 日本东京\n\n---\n\n**现任职位**\n\nAI 应用开发工程师 & 软件工程师 & 技术负责人 · MicroWorld Co., Ltd.（2023 年 2 月 – 至今）\n\n**教育背景**\n\n电子信息工程 工学硕士 · 电子科技大学（2021）\n\n**技术栈**\n\nC# .NET · Oracle · AWS · Azure · Langchain/LangGraph · Semantic Kernel\n\n**资格认证**\n\nAWS Certified DevOps Engineer – Professional\n\n**语言**\n\n中文（母语）· 日语（商务）· 英语（TOEIC 835）\n\n---\n\n在这里分享 AI、.NET、AWS 和云工程方面的实践经验。"
+      [languages.zh.params.aiChat]
+        title = "问问博客"
+        greeting = "你好！关于这个博客的文章，有什么都可以问我。"
+        placeholder = "输入你的问题…"
+        send = "发送"
+    [[languages.zh.menus.main]]
+      identifier = "posts"
+      name = "文章"
+      url = "/posts/"
+      weight = 10
+    [[languages.zh.menus.main]]
+      identifier = "tags"
+      name = "标签"
+      url = "/tags/"
+      weight = 20
+    [[languages.zh.menus.main]]
+      identifier = "about"
+      name = "关于"
+      url = "/about/"
+      weight = 30
+
+  [languages.ja]
+    label = "日本語"
+    locale = "ja-jp"
+    title = "Zhou Jing のテックブログ"
+    weight = 3
+    [languages.ja.params]
+      description = "ソフトウェアエンジニア | C# / .NET / AWS | 東京"
+      [languages.ja.params.homeInfoParams]
+        Title = "Zhou Jing — ソフトウェアエンジニア"
+        Content = "📍 東京\n\n---\n\n**現職**\n\nAI アプリケーション開発者 & ソフトウェアエンジニア & テックリード · MicroWorld Co., Ltd.（2023年2月 – 現在）\n\n**学歴**\n\n電子情報工学 修士（工学）· 電子科技大学（中国、2021）\n\n**技術スタック**\n\nC# .NET · Oracle · AWS · Azure · Langchain/LangGraph · Semantic Kernel\n\n**資格**\n\nAWS Certified DevOps Engineer – Professional\n\n**言語**\n\n中国語（ネイティブ）· 日本語（ビジネス）· 英語（TOEIC 835）\n\n---\n\nこのブログでは、AI・.NET・AWS・クラウドエンジニアリングの実践的な知見を共有しています。"
+      [languages.ja.params.aiChat]
+        title = "ブログに質問"
+        greeting = "こんにちは！このブログの記事について、何でも聞いてください。"
+        placeholder = "質問を入力…"
+        send = "送信"
+    [[languages.ja.menus.main]]
+      identifier = "posts"
+      name = "記事"
+      url = "/posts/"
+      weight = 10
+    [[languages.ja.menus.main]]
+      identifier = "tags"
+      name = "タグ"
+      url = "/tags/"
+      weight = 20
+    [[languages.ja.menus.main]]
+      identifier = "about"
+      name = "プロフィール"
+      url = "/about/"
+      weight = 30
+
+  [languages.fr]
+    label = "Français"
+    locale = "fr-fr"
+    title = "Le blog tech de Zhou Jing"
+    weight = 4
+    [languages.fr.params]
+      description = "Software Engineer | C# / .NET / AWS | Tokyo, Japon"
+      [languages.fr.params.homeInfoParams]
+        Title = "Zhou Jing — Software Engineer"
+        Content = "📍 Tokyo, Japon\n\n---\n\n**Poste actuel**\n\nAI Application Developer & Software Engineer & Technical Lead · MicroWorld Co., Ltd. (février 2023 – aujourd'hui)\n\n**Formation**\n\nMaster d'ingénierie en ingénierie de l'information électronique · University of Electronic Science and Technology of China (2021)\n\n**Compétences techniques**\n\nC# .NET · Oracle · AWS · Azure · Langchain/LangGraph · Semantic Kernel\n\n**Certifications**\n\nAWS Certified DevOps Engineer – Professional\n\n**Langues**\n\nChinois (langue maternelle) · Japonais (professionnel) · Anglais (TOEIC 835)\n\n---\n\nJe partage sur ce blog mon expérience pratique de l'IA, de .NET, d'AWS et de l'ingénierie cloud."
+      [languages.fr.params.aiChat]
+        title = "Interroger le blog"
+        greeting = "Bonjour ! Posez-moi vos questions sur les articles de ce blog."
+        placeholder = "Écrivez votre question…"
+        send = "Envoyer"
+    [[languages.fr.menus.main]]
+      identifier = "posts"
+      name = "Articles"
+      url = "/posts/"
+      weight = 10
+    [[languages.fr.menus.main]]
+      identifier = "tags"
+      name = "Tags"
+      url = "/tags/"
+      weight = 20
+    [[languages.fr.menus.main]]
+      identifier = "about"
+      name = "À propos"
+      url = "/about/"
+      weight = 30
+
+  [languages.es]
+    label = "Español"
+    locale = "es-es"
+    title = "El blog técnico de Zhou Jing"
+    weight = 5
+    [languages.es.params]
+      description = "Software Engineer | C# / .NET / AWS | Tokio, Japón"
+      [languages.es.params.homeInfoParams]
+        Title = "Zhou Jing — Software Engineer"
+        Content = "📍 Tokio, Japón\n\n---\n\n**Puesto actual**\n\nAI Application Developer & Software Engineer & Technical Lead · MicroWorld Co., Ltd. (febrero de 2023 – actualidad)\n\n**Formación**\n\nMáster en Ingeniería de la Información Electrónica · University of Electronic Science and Technology of China (2021)\n\n**Tecnologías**\n\nC# .NET · Oracle · AWS · Azure · Langchain/LangGraph · Semantic Kernel\n\n**Certificaciones**\n\nAWS Certified DevOps Engineer – Professional\n\n**Idiomas**\n\nChino (nativo) · Japonés (profesional) · Inglés (TOEIC 835)\n\n---\n\nEn este blog comparto experiencia práctica con IA, .NET, AWS e ingeniería en la nube."
+      [languages.es.params.aiChat]
+        title = "Pregunta al blog"
+        greeting = "¡Hola! Pregúntame lo que quieras sobre los artículos de este blog."
+        placeholder = "Escribe tu pregunta…"
+        send = "Enviar"
+    [[languages.es.menus.main]]
+      identifier = "posts"
+      name = "Artículos"
+      url = "/posts/"
+      weight = 10
+    [[languages.es.menus.main]]
+      identifier = "tags"
+      name = "Etiquetas"
+      url = "/tags/"
+      weight = 20
+    [[languages.es.menus.main]]
+      identifier = "about"
+      name = "Sobre mí"
+      url = "/about/"
+      weight = 30
