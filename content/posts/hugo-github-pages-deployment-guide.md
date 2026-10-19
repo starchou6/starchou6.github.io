@@ -18,11 +18,12 @@ No servers, no hosting fees, no CMS — just Markdown and a git push. Here's how
 
 Every time you push to the `main` branch, GitHub Actions automatically:
 
-1. Checks out your repository (including the theme submodule)
-2. Installs Hugo Extended
-3. Runs `hugo --minify` to build the static site into a `public/` folder
-4. Uploads the `public/` folder as a deployment artifact
-5. Deploys it to GitHub Pages
+1. Checks out your repository
+2. Clones the PaperMod theme into `themes/PaperMod`
+3. Installs Hugo Extended
+4. Runs `hugo --minify` to build the static site into a `public/` folder
+5. Uploads the `public/` folder as a deployment artifact
+6. Deploys it to GitHub Pages
 
 The whole process takes about 20–30 seconds. You write Markdown, push, and your post is live.
 
