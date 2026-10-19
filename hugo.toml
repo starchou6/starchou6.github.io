@@ -1,8 +1,7 @@
 baseURL = "https://starchou6.github.io/"
-languageCode = "en-us"
+locale = "en-us"
 title = "Zhou Jing's Tech Blog"
 theme = "PaperMod"
-paginate = 5
 
 [params]
   author = "Zhou Jing"
@@ -58,3 +57,6 @@ paginate = 5
 
 [outputs]
   home = ["HTML", "RSS", "JSON"]
+
+[pagination]
+  pagerSize = 5
